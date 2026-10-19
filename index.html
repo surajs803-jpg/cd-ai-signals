@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CD AI — Indicator Analysis</title>
+<style>
+:root{--bg:#080d13;--panel:#121a23;--panel2:#0c131b;--line:#263440;--text:#edf4fa;--muted:#8797a6;--cyan:#59c9e7;--green:#40d2a0;--red:#f0787e;--amber:#e8bd67;--violet:#8c78ff}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -20%,#173044 0,transparent 48%),var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}.app{max-width:1050px;margin:auto;padding:18px 15px 35px}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}.logo{font-size:25px;font-weight:900;letter-spacing:.06em}.logo span{color:var(--cyan)}.subtitle{font-size:10px;color:var(--muted);letter-spacing:.2em}.status{border:1px solid var(--line);border-radius:30px;padding:8px 12px;color:var(--muted);font-size:12px}.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-right:7px}.grid{display:grid;grid-template-columns:1.25fr .9fr;gap:14px}.card{background:linear-gradient(145deg,var(--panel),#0f161e);border:1px solid var(--line);border-radius:20px;padding:17px;min-width:0}.wide{grid-column:1/-1}.section-label{font-size:10px;color:var(--cyan);font-weight:850;letter-spacing:.17em}.heading{font-size:21px;font-weight:800;margin:7px 0 13px}.controls{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.controls button,.controls select,.btn{background:#192633;color:var(--text);border:1px solid #334654;border-radius:11px;padding:10px 12px;font:inherit}.controls button{cursor:pointer}.controls button.active{background:#123746;border-color:#367e94;color:#8de4fa}.price{font-size:clamp(27px,4vw,39px);font-weight:850;letter-spacing:-.04em;font-variant-numeric:tabular-nums}.muted{color:var(--muted)}.chart{width:100%;height:280px;display:block;background:#0b1118;border:1px solid var(--line);border-radius:13px;margin-top:12px}.verdict{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#0d151d;border:1px solid var(--line);border-radius:14px;padding:14px;margin:10px 0}.signal{font-weight:900;letter-spacing:.08em;border-radius:30px;padding:9px 13px;background:#29313a;color:var(--amber)}.LONG{background:#12372e;color:var(--green)}.SHORT{background:#3b2027;color:var(--red)}.WAIT{background:#342e20;color:var(--amber)}.levels{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.metric{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:11px;min-width:0}.metric label{display:block;color:var(--muted);font-size:10px;letter-spacing:.1em}.metric strong{display:block;font-size:16px;margin-top:6px;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}.green{color:var(--green)}.red{color:var(--red)}.amber{color:var(--amber)}.lanes{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.lane{background:#0d141c;border:1px solid var(--line);border-radius:13px;padding:12px}.lane small{display:block;color:var(--muted);font-size:10px;letter-spacing:.12em}.lane b{display:block;margin:7px 0 3px}.table{width:100%;border-collapse:collapse}.table td,.table th{text-align:left;padding:11px 7px;border-bottom:1px solid var(--line)}.table th{font-size:10px;color:var(--muted);letter-spacing:.1em}.bar{height:7px;border-radius:9px;background:#202d39;overflow:hidden;margin-top:9px}.bar span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--violet))}.foot{font-size:11px;line-height:1.5;color:#758595;margin-top:14px}.primary{width:100%;margin-top:12px;background:linear-gradient(110deg,#2b9dbd,#7765e9);border:0;color:white;padding:13px;border-radius:12px;font-weight:850;cursor:pointer}.error{color:var(--amber);font-size:12px}
+@media(max-width:720px){.grid{grid-template-columns:1fr}.wide{grid-column:auto}.lanes{grid-template-columns:1fr 1fr}.chart{height:250px}.app{padding:14px 12px}.levels{grid-template-columns:1fr 1fr}.levels .metric:last-child{grid-column:1/-1}}
+</style></head>
+<body><div class="app">
+<header class="top"><div><div class="logo">CD <span>AI</span></div><div class="subtitle">CRYPTO INDICATOR ANALYSIS</div></div><div class="status"><span class="dot"></span><span id="connection">Connecting to market data</span></div></header>
+<div class="grid">
+<section class="card">
+<div class="section-label">LIVE MARKET</div><div class="controls">
+<button class="coin active" data-symbol="BTCUSDT">BTC / USDT</button><button class="coin" data-symbol="ETHUSDT">ETH / USDT</button>
+<select id="tf"><option value="15m">15 minutes</option><option value="1h" selected>1 hour</option><option value="4h">4 hours</option><option value="1d">1 day</option></select>
+<button id="refresh">Refresh ↻</button></div>
+<div class="price" id="price">—</div><div class="muted" id="priceSub">Loading closed candles…</div>
+<canvas id="chart" class="chart" width="900" height="420"></canvas>
+<div class="foot">Candles are fetched from Binance public market data. Current forming candle is excluded from signal calculations.</div>
+</section>
+<section class="card">
+<div class="section-label">CD AI VERDICT</div><div class="heading">Signal Analysis</div>
+<div class="verdict"><div><div class="muted" style="font-size:11px">DECISION</div><div id="reason" style="margin-top:5px">Waiting for data</div></div><span id="signal" class="signal WAIT">WAIT</span></div>
+<div class="metric"><label>CONFIRMATION SCORE (RULE-BASED)</label><strong id="score">—</strong><div class="bar"><span id="scorebar"></span></div></div>
+<div class="levels"><div class="metric"><label>ENTRY</label><strong id="entry">—</strong></div><div class="metric"><label>STOP LOSS</label><strong class="red" id="stop">—</strong></div><div class="metric"><label>TARGET 1</label><strong class="green" id="target">—</strong></div></div>
+<button id="analyze" class="primary">Analyze market</button>
+<div class="foot">Educational signal prototype, not financial advice. A score is rule agreement, not a probability of winning.</div>
+</section>
+<section class="card wide">
+<div class="section-label">FOUR ANALYSIS LANES</div><div class="heading">Technical · Flow · News · Macro</div>
+<div class="lanes">
+<div class="lane"><small>TECHNICAL</small><b id="technical">Loading…</b><span class="muted" id="techdetail">EMA + RSI</span></div>
+<div class="lane"><small>FLOW PROXY</small><b id="flow">Loading…</b><span class="muted">Volume vs average</span></div>
+<div class="lane"><small>NEWS</small><b class="amber">Not connected</b><span class="muted">Needs news provider</span></div>
+<div class="lane"><small>MACRO</small><b class="amber">Not connected</b><span class="muted">Needs macro provider</span></div>
+</div>
+</section>
+<section class="card">
+<div class="section-label">INDICATOR VALUES</div><div class="heading">Technical checks</div>
+<table class="table"><tbody>
+<tr><td>EMA 9</td><td id="ema9">—</td></tr><tr><td>EMA 20</td><td id="ema20">—</td></tr><tr><td>EMA 50</td><td id="ema50">—</td></tr><tr><td>EMA 200</td><td id="ema200">—</td></tr><tr><td>RSI (14)</td><td id="rsi">—</td></tr><tr><td>Volume / 20-bar avg</td><td id="vol">—</td></tr><tr><td>ATR (14)</td><td id="atr">—</td></tr>
+</tbody></table><div class="foot">VWAP is omitted from this first version because a reliable session anchor and market-specific session handling should be defined before use.</div>
+</section>
+<section class="card">
+<div class="section-label">BACKTEST PREVIEW</div><div class="heading">Historical rule check</div>
+<div class="levels"><div class="metric"><label>CLOSED TRADES</label><strong id="trades">—</strong></div><div class="metric"><label>WIN RATE</label><strong id="winrate">—</strong></div><div class="metric"><label>NET RETURN*</label><strong id="net">—</strong></div></div>
+<p class="foot">Simple historical simulation: EMA 9/20 crossover with 2% stop and 3% target. Conservative stop-first handling when both levels are touched in one candle. Fees, slippage, funding and execution latency are excluded.</p>
+</section>
+</div>
+<p class="foot">Prototype limits: no connected AI model, live news, macro feed, or Telegram backend yet. Validate this strategy on more data and paper trade before considering real trades. Never place bot tokens or API secrets in frontend HTML.</p>
+</div>
+<script>
+const $=id=>document.getElementById(id);let symbol='BTCUSDT',bars=[];
+const fmt=n=>Number.isFinite(n)?n.toLocaleString('en-US',{maximumFractionDigits:2}):'—';
+function ema(a,p){let k=2/(p+1),o=[a[0]];for(let i=1;i<a.length;i++)o.push(a[i]*k+o[i-1]*(1-k));return o}
+function rsi(a,p=14){if(a.length<=p)return NaN;let g=0,l=0;for(let i=a.length-p;i<a.length;i++){let d=a[i]-a[i-1];if(d>0)g+=d;else l-=d}return l===0?100:100-100/(1+g/l)}
+function atr(a,p=14){let tr=[];for(let i=1;i<a.length;i++)tr.push(Math.max(a[i].h-a[i].l,Math.abs(a[i].h-a[i-1].c),Math.abs(a[i].l-a[i-1].c)));return tr.slice(-p).reduce((x,y)=>x+y,0)/Math.min(p,tr.length)}
+function draw(data){let c=$('chart'),x=c.getContext('2d'),w=c.width,h=c.height;x.clearRect(0,0,w,h);if(!data.length)return;let lo=Math.min(...data.map(d=>d.l)),hi=Math.max(...data.map(d=>d.h)),pad=(hi-lo)*.09||1;lo-=pad;hi+=pad;x.strokeStyle='#202c37';for(let j=1;j<6;j++){let y=j*h/6;x.beginPath();x.moveTo(0,y);x.lineTo(w,y);x.stroke()}let step=w/data.length,bw=Math.max(2,step*.58);data.forEach((d,i)=>{let xx=i*step+step/2,yo=h-(d.o-lo)/(hi-lo)*h,yc=h-(d.c-lo)/(hi-lo)*h,yh=h-(d.h-lo)/(hi-lo)*h,yl=h-(d.l-lo)/(hi-lo)*h;x.strokeStyle=d.c>=d.o?'#40d2a0':'#f0787e';x.fillStyle=x.strokeStyle;x.beginPath();x.moveTo(xx,yh);x.lineTo(xx,yl);x.stroke();x.fillRect(xx-bw/2,Math.min(yo,yc),bw,Math.max(1,Math.abs(yc-yo)))})}
+function backtest(data,e9,e20){let pos=null,trades=0,wins=0,ret=0;for(let i=21;i<data.length;i++){let d=data[i];if(!pos&&e9[i]>e20[i]&&e9[i-1]<=e20[i-1])pos={entry:d.c,stop:d.c*.98,tp:d.c*1.03};else if(pos){let outcome=null;if(d.l<=pos.stop)outcome=-.02;else if(d.h>=pos.tp)outcome=.03;else if(e9[i]<e20[i])outcome=(d.c-pos.entry)/pos.entry;if(outcome!==null){trades++;ret+=outcome;if(outcome>0)wins++;pos=null}}}$('trades').textContent=trades;$('winrate').textContent=trades?Math.round(wins/trades*100)+'%':'—';$('net').textContent=trades?(ret*100).toFixed(2)+'%':'—';$('net').className=ret>=0?'green':'red'}
+async function load(){ $('connection').textContent='Loading…';try{let tf=$('tf').value,res=await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${tf}&limit=250`);if(!res.ok)throw Error('Public market data request failed');let raw=await res.json();bars=raw.slice(0,-1).map(k=>({t:k[0],o:+k[1],h:+k[2],l:+k[3],c:+k[4],v:+k[5]}));if(bars.length<205)throw Error('Not enough candles for EMA 200');let close=bars.map(d=>d.c),e9=ema(close,9),e20=ema(close,20),e50=ema(close,50),e200=ema(close,200),rv=rsi(close),av=atr(bars),i=close.length-1,volavg=bars.slice(-21,-1).reduce((s,d)=>s+d.v,0)/20,vr=bars[i].v/volavg;
+let bull=e9[i]>e20[i]&&close[i]>e50[i]&&close[i]>e200[i]&&rv>50,bear=e9[i]<e20[i]&&close[i]<e50[i]&&close[i]<e200[i]&&rv<50,side=bull?'LONG':bear?'SHORT':'WAIT';
+let points=0;points+=(e9[i]>e20[i]?1:-1);points+=(close[i]>e50[i]?1:-1);points+=(close[i]>e200[i]?1:-1);points+=(rv>55?1:rv<45?-1:0);points+=(vr>1? (close[i]>close[i-1]?1:-1):0);let score=Math.round(Math.abs(points)/5*100),p=close[i],risk=Math.max(av*1.5,p*.01),stop=side==='SHORT'?p+risk:p-risk,target=side==='SHORT'?p-risk*1.5:p+risk*1.5;
+$('price').textContent=fmt(p)+' USDT';$('priceSub').textContent=symbol.replace('USDT','/USDT')+' · '+tf+' · last closed candle';$('signal').textContent=side;$('signal').className='signal '+side;$('reason').textContent=side==='LONG'?'Trend and momentum bullish':side==='SHORT'?'Trend and momentum bearish':'Trend filters disagree; wait';$('score').textContent=score+'/100 agreement';$('scorebar').style.width=score+'%';$('entry').textContent=fmt(p);$('stop').textContent=fmt(stop);$('target').textContent=fmt(target);
+$('technical').textContent=side==='WAIT'?'Mixed':side==='LONG'?'Bullish':'Bearish';$('techdetail').textContent='EMA + RSI '+rv.toFixed(1);$('flow').textContent=vr>1.15?'High volume':vr<.7?'Low volume':'Normal volume';$('ema9').textContent=fmt(e9[i]);$('ema20').textContent=fmt(e20[i]);$('ema50').textContent=fmt(e50[i]);$('ema200').textContent=fmt(e200[i]);$('rsi').textContent=rv.toFixed(1);$('vol').textContent=vr.toFixed(2)+'×';$('atr').textContent=fmt(av);draw(bars.slice(-60));backtest(bars,e9,e20);$('connection').textContent='Public data connected'}catch(err){$('connection').textContent='Data unavailable';$('reason').textContent=err.message+'; check network or retry.';$('technical').textContent='Unavailable'}}
+document.querySelectorAll('.coin').forEach(b=>b.onclick=()=>{symbol=b.dataset.symbol;document.querySelectorAll('.coin').forEach(x=>x.classList.toggle('active',x===b));load()});$('refresh').onclick=load;$('analyze').onclick=load;$('tf').onchange=load;load();
+</script></body></html>
